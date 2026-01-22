@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 import { getAdmin } from './_lib/firebaseAdmin';
 
 type Body = {
