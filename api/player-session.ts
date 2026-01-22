@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
 import { getAdmin } from './_lib/firebaseAdmin';
+
+// CommonJS require (عشان Vercel runtime عندك مش ESM)
+const jwt = require('jsonwebtoken') as typeof import('jsonwebtoken');
 
 type Body = {
   courseId: string;
@@ -50,21 +52,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const decoded = await admin.auth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
-    // ✅ Server-side enrollment check (matches EnrollmentGuard idea)
     const enrollmentSnap = await admin
       .database()
       .ref(`enrollments/${uid}/${courseId}`)
       .get();
 
-    // Allow admins too (optional) - check role if you store it
     const isEnrolled = enrollmentSnap.exists();
-
     if (!isEnrolled) {
       res.status(403).send('Not enrolled in this course');
       return;
     }
 
-    const expiresInSec = Number(process.env.PLAYER_SESSION_TTL_SEC || 300); // default 5 minutes
+    const expiresInSec = Number(process.env.PLAYER_SESSION_TTL_SEC || 300);
     const now = Math.floor(Date.now() / 1000);
 
     const token = jwt.sign(
